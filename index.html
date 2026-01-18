@@ -1,125 +1,580 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracklink Ecuador - Projects</title>
+    <title>Huginn - Tracklink Projects</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
+        /* Tracklink Design System */
+        :root {
+            --tl-cyan-primary: #00bcff;
+            --tl-cyan-secondary: #40c0f0;
+            --tl-navy: #1e2f41;
+            --tl-navy-dark: #162230;
+            --tl-gray-blue: #90a2aa;
+            --tl-cyan-light: #aedef8;
+            --tl-white: #ffffff;
+            --tl-success: #10b981;
+            --tl-warning: #f59e0b;
+            --tl-error: #ef4444;
+            --tl-info: #3b82f6;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: #fff; }
-        header { background: rgba(255,255,255,0.05); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; gap: 10px; }
-        header h1 { font-size: 20px; font-weight: 600; }
-        header h1 span { color: #00d4ff; }
-        .header-stats { display: flex; gap: 15px; font-size: 12px; color: rgba(255,255,255,0.7); align-items: center; }
-        .header-stats strong { color: #fff; }
-        .sync-status { font-size: 11px; padding: 4px 10px; border-radius: 10px; }
-        .sync-status.connected { background: #27ae60; }
-        .sync-status.disconnected { background: #e74c3c; }
-        .views { display: flex; gap: 5px; padding: 10px 20px; background: rgba(0,0,0,0.3); }
-        .view-btn { padding: 8px 16px; border-radius: 6px; border: none; background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 12px; }
-        .view-btn:hover { background: rgba(255,255,255,0.2); }
-        .view-btn.active { background: #00d4ff; color: #1a1a2e; font-weight: 600; }
-        .filters { display: flex; gap: 8px; padding: 10px 20px; background: rgba(0,0,0,0.2); flex-wrap: wrap; }
-        .filters select, .filters input { padding: 6px 10px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 12px; }
-        .filters input { width: 180px; }
-        .board { display: flex; gap: 12px; padding: 15px; overflow-x: auto; min-height: calc(100vh - 140px); }
-        .column { background: rgba(255,255,255,0.05); border-radius: 8px; min-width: 260px; max-width: 260px; display: flex; flex-direction: column; max-height: calc(100vh - 160px); }
-        .column-header { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .column-header h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .column-count { background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; }
-        .column-body { padding: 8px; flex: 1; overflow-y: auto; min-height: 100px; }
-        .column-body.drag-over { background: rgba(0,212,255,0.15); border-radius: 5px; }
-        .card { background: rgba(255,255,255,0.08); border-radius: 6px; padding: 10px; margin-bottom: 8px; border-left: 3px solid; cursor: grab; user-select: none; }
-        .card:hover { background: rgba(255,255,255,0.12); }
+
+        body {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--tl-navy) 0%, var(--tl-navy-dark) 100%);
+            min-height: 100vh;
+            color: var(--tl-white);
+        }
+
+        /* Header */
+        header {
+            background: rgba(255,255,255,0.03);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .logo-track { color: var(--tl-white); }
+        .logo-link { color: var(--tl-cyan-primary); }
+        .logo-chevrons { color: var(--tl-gray-blue); font-size: 12px; }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--tl-cyan-primary);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--tl-gray-blue);
+            align-items: center;
+        }
+
+        .header-stats strong { color: var(--tl-white); }
+
+        .sync-status {
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .sync-status.connected { background: var(--tl-success); color: white; }
+        .sync-status.disconnected { background: var(--tl-error); color: white; }
+
+        /* Views */
+        .views {
+            display: flex;
+            gap: 6px;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .view-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: var(--tl-gray-blue);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            background: rgba(255,255,255,0.12);
+            color: var(--tl-white);
+        }
+
+        .view-btn.active {
+            background: var(--tl-cyan-primary);
+            color: var(--tl-navy);
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+        }
+
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: var(--tl-white);
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .filters input { width: 200px; }
+        .filters select:focus, .filters input:focus {
+            outline: none;
+            border-color: var(--tl-cyan-primary);
+        }
+
+        /* Board */
+        .board {
+            display: flex;
+            gap: 14px;
+            padding: 20px;
+            overflow-x: auto;
+            min-height: calc(100vh - 150px);
+        }
+
+        .column {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            min-width: 280px;
+            max-width: 280px;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 170px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .column-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .column-header h2 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .column-count {
+            background: rgba(255,255,255,0.15);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .column-body {
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 100px;
+        }
+
+        .column-body.drag-over {
+            background: rgba(0, 188, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        /* Column header colors */
+        .column.backlog .column-header { background: rgba(144, 162, 170, 0.25); }
+        .column.todo .column-header { background: rgba(59, 130, 246, 0.25); }
+        .column.in_progress .column-header { background: rgba(245, 158, 11, 0.25); }
+        .column.review .column-header { background: rgba(139, 92, 246, 0.25); }
+        .column.done .column-header { background: rgba(16, 185, 129, 0.25); }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
         .card:active { cursor: grabbing; }
         .card.dragging { opacity: 0.4; }
-        .card.critical { border-left-color: #e74c3c; }
-        .card.high { border-left-color: #f39c12; }
-        .card.medium { border-left-color: #3498db; }
-        .card.low { border-left-color: #27ae60; }
-        .card-title { font-size: 12px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
-        .card-priority { font-size: 8px; padding: 2px 5px; border-radius: 3px; text-transform: uppercase; font-weight: 700; display: inline-block; margin-bottom: 4px; }
-        .card-priority.critical { background: #e74c3c; }
-        .card-priority.high { background: #f39c12; }
-        .card-priority.medium { background: #3498db; }
-        .card-priority.low { background: #27ae60; }
-        .card-area { font-size: 9px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
-        .card-footer { font-size: 10px; color: rgba(255,255,255,0.5); }
-        .owner-avatar { width: 18px; height: 18px; border-radius: 50%; background: #00d4ff; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #1a1a2e; margin-right: 4px; vertical-align: middle; }
-        .column.backlog .column-header { background: rgba(108, 117, 125, 0.3); }
-        .column.todo .column-header { background: rgba(0, 123, 255, 0.3); }
-        .column.in_progress .column-header { background: rgba(255, 193, 7, 0.3); }
-        .column.review .column-header { background: rgba(111, 66, 193, 0.3); }
-        .column.done .column-header { background: rgba(40, 167, 69, 0.3); }
-        .empty-column { text-align: center; padding: 20px 10px; color: rgba(255,255,255,0.3); font-size: 12px; }
-        .add-btn { background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 5px; padding: 8px; text-align: center; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 11px; margin-top: 5px; }
-        .add-btn:hover { background: rgba(255,255,255,0.1); }
-        .processor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; padding: 15px; }
-        .processor-card { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; }
-        .processor-card h3 { font-size: 14px; margin-bottom: 8px; }
-        .processor-card .count { font-size: 11px; color: rgba(255,255,255,0.6); display: block; margin-bottom: 10px; }
-        .processor-projects { max-height: 280px; overflow-y: auto; }
-        .mini-card { background: rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; margin-bottom: 6px; border-left: 3px solid; font-size: 11px; cursor: pointer; }
-        .mini-card.critical { border-left-color: #e74c3c; }
-        .mini-card.high { border-left-color: #f39c12; }
-        .mini-card.medium { border-left-color: #3498db; }
-        .mini-card.low { border-left-color: #27ae60; }
-        .warning-badge { background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+
+        .card.critical { border-left-color: var(--tl-error); }
+        .card.high { border-left-color: var(--tl-warning); }
+        .card.medium { border-left-color: var(--tl-info); }
+        .card.low { border-left-color: var(--tl-success); }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .card-priority {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 6px;
+            letter-spacing: 0.03em;
+        }
+
+        .card-priority.critical { background: var(--tl-error); }
+        .card-priority.high { background: var(--tl-warning); color: var(--tl-navy); }
+        .card-priority.medium { background: var(--tl-info); }
+        .card-priority.low { background: var(--tl-success); }
+
+        .card-area {
+            font-size: 10px;
+            color: var(--tl-gray-blue);
+            margin-bottom: 6px;
+        }
+
+        .card-footer {
+            font-size: 11px;
+            color: var(--tl-gray-blue);
+        }
+
+        .owner-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--tl-cyan-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--tl-navy);
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .empty-column {
+            text-align: center;
+            padding: 25px 15px;
+            color: var(--tl-gray-blue);
+            font-size: 12px;
+        }
+
+        .add-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            color: var(--tl-gray-blue);
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--tl-cyan-primary);
+            color: var(--tl-cyan-primary);
+        }
+
+        /* Processor Grid */
+        .processor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .processor-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .processor-card h3 {
+            font-size: 15px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .processor-card .count {
+            font-size: 11px;
+            color: var(--tl-gray-blue);
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .processor-projects {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .mini-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mini-card:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .mini-card.critical { border-left-color: var(--tl-error); }
+        .mini-card.high { border-left-color: var(--tl-warning); }
+        .mini-card.medium { border-left-color: var(--tl-info); }
+        .mini-card.low { border-left-color: var(--tl-success); }
+
+        .warning-badge {
+            background: var(--tl-error);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
         .modal.active { display: flex; }
-        .modal-content { background: #1e1e2e; border-radius: 10px; padding: 20px; width: 90%; max-width: 450px; max-height: 85vh; overflow-y: auto; }
-        .modal-content h2 { margin-bottom: 15px; font-size: 16px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 4px; font-size: 11px; color: rgba(255,255,255,0.7); }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.05); color: #fff; font-size: 12px; }
-        .form-group textarea { resize: vertical; min-height: 60px; }
-        .form-row { display: flex; gap: 10px; }
+
+        .modal-content {
+            background: var(--tl-navy);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: var(--tl-cyan-primary);
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: var(--tl-gray-blue);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: var(--tl-white);
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--tl-cyan-primary);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
         .form-row .form-group { flex: 1; }
-        .form-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .btn { padding: 8px 15px; border-radius: 5px; font-size: 12px; cursor: pointer; border: none; font-weight: 500; }
-        .btn-primary { background: #00d4ff; color: #1a1a2e; }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn-danger { background: #e74c3c; color: #fff; margin-left: auto; }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--tl-cyan-primary);
+            color: var(--tl-navy);
+        }
+
+        .btn-primary:hover {
+            background: var(--tl-cyan-secondary);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--tl-white);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .btn-danger {
+            background: var(--tl-error);
+            color: var(--tl-white);
+            margin-left: auto;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1><span>Tracklink</span> Ecuador</h1>
+        <div class="logo">
+            <span class="logo-text">
+                <span class="logo-track">TRACK</span><span class="logo-link">LINK</span>
+                <span class="logo-chevrons">&lt;&lt;&lt;</span>
+            </span>
+            <h1>Huginn</h1>
+        </div>
         <div class="header-stats">
             <span class="sync-status disconnected" id="sync">Connecting...</span>
             <div>Total: <strong id="total">0</strong></div>
-            <div>Critical: <strong id="critical" style="color:#e74c3c">0</strong></div>
-            <div>In Progress: <strong id="inprog" style="color:#f1c40f">0</strong></div>
+            <div>Critical: <strong id="critical" style="color: var(--tl-error)">0</strong></div>
+            <div>In Progress: <strong id="inprog" style="color: var(--tl-warning)">0</strong></div>
         </div>
     </header>
+
     <div class="views">
         <button class="view-btn active" onclick="setView('kanban',this)">Kanban</button>
         <button class="view-btn" onclick="setView('processor',this)">By Processor</button>
         <button class="view-btn" onclick="setView('nonprio',this)">Non-Prioritized</button>
     </div>
+
     <div class="filters">
-        <input type="text" id="search" placeholder="Search..." oninput="render()">
-        <select id="fprio" onchange="render()"><option value="">All Priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+        <input type="text" id="search" placeholder="Search projects..." oninput="render()">
+        <select id="fprio" onchange="render()">
+            <option value="">All Priorities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
         <select id="fowner" onchange="render()"></select>
     </div>
+
     <div id="container"></div>
+
     <div class="modal" id="modal">
         <div class="modal-content">
             <h2 id="mtitle">Edit Project</h2>
             <form id="pform">
                 <input type="hidden" id="pid">
-                <div class="form-group"><label>Name *</label><input type="text" id="pname" required></div>
-                <div class="form-group"><label>Description</label><textarea id="pdesc"></textarea></div>
-                <div class="form-row">
-                    <div class="form-group"><label>Owner</label><select id="powner"></select></div>
-                    <div class="form-group"><label>External</label><input type="text" id="pext"></div>
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="pname" required>
                 </div>
-                <div class="form-group"><label>Area</label><input type="text" id="parea"></div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="pdesc"></textarea>
+                </div>
                 <div class="form-row">
-                    <div class="form-group"><label>Priority</label><select id="pprio"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
-                    <div class="form-group"><label>Status</label><select id="pstat"><option value="backlog">Backlog</option><option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">Review</option><option value="done">Done</option></select></div>
+                    <div class="form-group">
+                        <label>Owner</label>
+                        <select id="powner"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>External</label>
+                        <input type="text" id="pext">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Area</label>
+                    <input type="text" id="parea">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="pprio">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="pstat">
+                            <option value="backlog">Backlog</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save</button>
@@ -129,44 +584,229 @@
             </form>
         </div>
     </div>
+
     <script>
         firebase.initializeApp({databaseURL:"https://tracklink-projects-default-rtdb.firebaseio.com"});
         const db=firebase.database(), pRef=db.ref('projects'), tRef=db.ref('team');
         let projects=[],team=[],view='kanban',dragId=null;
-        const cols=[{id:'backlog',n:'Backlog',i:'📋'},{id:'todo',n:'To Do',i:'📝'},{id:'in_progress',n:'In Progress',i:'🔄'},{id:'review',n:'Review',i:'👀'},{id:'done',n:'Done',i:'✅'}];
+        const cols=[
+            {id:'backlog',n:'Backlog',i:''},
+            {id:'todo',n:'To Do',i:''},
+            {id:'in_progress',n:'In Progress',i:''},
+            {id:'review',n:'Review',i:''},
+            {id:'done',n:'Done',i:''}
+        ];
 
-        db.ref('.info/connected').on('value',s=>{const e=document.getElementById('sync');if(s.val()){e.textContent='Live';e.className='sync-status connected';}else{e.textContent='Offline';e.className='sync-status disconnected';}});
-        pRef.on('value',s=>{const d=s.val();projects=d?Object.keys(d).map(k=>({...d[k],id:k})):[];render();setupFilters();});
-        tRef.on('value',s=>{const d=s.val();team=d?Object.values(d):[];setupFilters();});
+        db.ref('.info/connected').on('value',s=>{
+            const e=document.getElementById('sync');
+            if(s.val()){
+                e.textContent='Live';
+                e.className='sync-status connected';
+            } else {
+                e.textContent='Offline';
+                e.className='sync-status disconnected';
+            }
+        });
 
-        function gi(o){if(!o)return'?';const m=team.find(t=>t.name===o);if(m)return m.initials;const w=o.split(' ');return w.length>=2?(w[0][0]+w[1][0]).toUpperCase():o.substring(0,2).toUpperCase();}
-        function filter(){const s=document.getElementById('search').value.toLowerCase(),p=document.getElementById('fprio').value,o=document.getElementById('fowner').value;return projects.filter(x=>{if(s&&!x.name.toLowerCase().includes(s)&&!(x.description||'').toLowerCase().includes(s))return false;if(p&&x.priority!==p)return false;if(o&&x.owner!==o)return false;return true;});}
-        function setView(v,btn){view=v;document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+        pRef.on('value',s=>{
+            const d=s.val();
+            projects=d?Object.keys(d).map(k=>({...d[k],id:k})):[];
+            render();
+            setupFilters();
+        });
 
-        function card(p){return`<div class="card ${p.priority}" draggable="true" data-id="${p.id}" ondragstart="ds(event)" ondragend="de(event)" onclick="editProj('${p.id}')"><span class="card-priority ${p.priority}">${p.priority}</span><div class="card-title">${p.name}</div>${p.area?`<div class="card-area">${p.area}</div>`:''}<div class="card-footer"><span class="owner-avatar">${gi(p.owner)}</span>${p.owner||'Unassigned'}</div></div>`;}
+        tRef.on('value',s=>{
+            const d=s.val();
+            team=d?Object.values(d):[];
+            setupFilters();
+        });
 
-        function renderK(f){let h='<div class="board">';cols.forEach(c=>{const ps=f.filter(p=>p.status===c.id);h+=`<div class="column ${c.id}"><div class="column-header"><h2>${c.i} ${c.n}</h2><span class="column-count">${ps.length}</span></div><div class="column-body" data-status="${c.id}" ondragover="dov(event)" ondragleave="dl(event)" ondrop="dr(event)">${ps.length?ps.map(card).join(''):'<div class="empty-column">Drop here</div>'}<div class="add-btn" onclick="openModal('${c.id}')">+ Add</div></div></div>`;});return h+'</div>';}
+        function gi(o){
+            if(!o)return'?';
+            const m=team.find(t=>t.name===o);
+            if(m)return m.initials;
+            const w=o.split(' ');
+            return w.length>=2?(w[0][0]+w[1][0]).toUpperCase():o.substring(0,2).toUpperCase();
+        }
 
-        function renderP(f){const owners=[...new Set(projects.map(p=>p.owner))].sort();let h='<div class="processor-grid">';owners.forEach(o=>{const ps=f.filter(p=>p.owner===o);if(!ps.length)return;const cr=ps.filter(p=>p.priority==='critical').length,hi=ps.filter(p=>p.priority==='high').length,ip=ps.filter(p=>p.status==='in_progress').length;const warn=ip===0?' <span class="warning-badge">No active</span>':'';h+=`<div class="processor-card"><h3>${o||'⚠️ UNASSIGNED'}${warn}</h3><span class="count">${ps.length} projects | ${cr} critical | ${hi} high</span><div class="processor-projects">${ps.slice(0,10).map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}<br><small style="color:rgba(255,255,255,0.4)">${p.status}</small></div>`).join('')}${ps.length>10?`<div style="color:rgba(255,255,255,0.3);font-size:10px;text-align:center">+${ps.length-10} more</div>`:''}</div></div>`;});return h+'</div>';}
+        function filter(){
+            const s=document.getElementById('search').value.toLowerCase();
+            const p=document.getElementById('fprio').value;
+            const o=document.getElementById('fowner').value;
+            return projects.filter(x=>{
+                if(s&&!x.name.toLowerCase().includes(s)&&!(x.description||'').toLowerCase().includes(s))return false;
+                if(p&&x.priority!==p)return false;
+                if(o&&x.owner!==o)return false;
+                return true;
+            });
+        }
 
-        function renderN(f){const np=f.filter(p=>['medium','low'].includes(p.priority)&&p.status==='backlog');const owners=[...new Set(np.map(p=>p.owner))].sort();let h='<div class="processor-grid">';owners.forEach(o=>{const ps=np.filter(p=>p.owner===o);if(!ps.length)return;h+=`<div class="processor-card"><h3>${o||'⚠️ UNASSIGNED'}</h3><span class="count">${ps.length} non-prioritized in backlog</span><div class="processor-projects">${ps.map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}</div>`).join('')}</div></div>`;});return h+'</div>';}
+        function setView(v,btn){
+            view=v;
+            document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
 
-        function render(){const f=filter(),c=document.getElementById('container');if(view==='kanban')c.innerHTML=renderK(f);else if(view==='processor')c.innerHTML=renderP(f);else c.innerHTML=renderN(f);document.getElementById('total').textContent=projects.length;document.getElementById('critical').textContent=projects.filter(p=>p.priority==='critical').length;document.getElementById('inprog').textContent=projects.filter(p=>p.status==='in_progress').length;}
+        function card(p){
+            return`<div class="card ${p.priority}" draggable="true" data-id="${p.id}" ondragstart="ds(event)" ondragend="de(event)" onclick="editProj('${p.id}')">
+                <span class="card-priority ${p.priority}">${p.priority}</span>
+                <div class="card-title">${p.name}</div>
+                ${p.area?`<div class="card-area">${p.area}</div>`:''}
+                <div class="card-footer">
+                    <span class="owner-avatar">${gi(p.owner)}</span>${p.owner||'Unassigned'}
+                </div>
+            </div>`;
+        }
 
-        function setupFilters(){const owners=[...new Set(projects.map(p=>p.owner).filter(o=>o))].sort();document.getElementById('fowner').innerHTML='<option value="">All Owners</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('');document.getElementById('powner').innerHTML='<option value="">Select...</option>'+[...new Set([...owners,...team.map(t=>t.name)])].sort().map(o=>`<option value="${o}">${o}</option>`).join('');}
+        function renderK(f){
+            let h='<div class="board">';
+            cols.forEach(c=>{
+                const ps=f.filter(p=>p.status===c.id);
+                h+=`<div class="column ${c.id}">
+                    <div class="column-header">
+                        <h2>${c.n}</h2>
+                        <span class="column-count">${ps.length}</span>
+                    </div>
+                    <div class="column-body" data-status="${c.id}" ondragover="dov(event)" ondragleave="dl(event)" ondrop="dr(event)">
+                        ${ps.length?ps.map(card).join(''):'<div class="empty-column">Drop here</div>'}
+                        <div class="add-btn" onclick="openModal('${c.id}')">+ Add Project</div>
+                    </div>
+                </div>`;
+            });
+            return h+'</div>';
+        }
+
+        function renderP(f){
+            const owners=[...new Set(projects.map(p=>p.owner))].sort();
+            let h='<div class="processor-grid">';
+            owners.forEach(o=>{
+                const ps=f.filter(p=>p.owner===o);
+                if(!ps.length)return;
+                const cr=ps.filter(p=>p.priority==='critical').length;
+                const hi=ps.filter(p=>p.priority==='high').length;
+                const ip=ps.filter(p=>p.status==='in_progress').length;
+                const warn=ip===0?' <span class="warning-badge">No active</span>':'';
+                h+=`<div class="processor-card">
+                    <h3>${o||'Unassigned'}${warn}</h3>
+                    <span class="count">${ps.length} projects | ${cr} critical | ${hi} high</span>
+                    <div class="processor-projects">
+                        ${ps.slice(0,10).map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}<br><small style="color:var(--tl-gray-blue)">${p.status}</small></div>`).join('')}
+                        ${ps.length>10?`<div style="color:var(--tl-gray-blue);font-size:11px;text-align:center;padding:8px">+${ps.length-10} more</div>`:''}
+                    </div>
+                </div>`;
+            });
+            return h+'</div>';
+        }
+
+        function renderN(f){
+            const np=f.filter(p=>['medium','low'].includes(p.priority)&&p.status==='backlog');
+            const owners=[...new Set(np.map(p=>p.owner))].sort();
+            let h='<div class="processor-grid">';
+            owners.forEach(o=>{
+                const ps=np.filter(p=>p.owner===o);
+                if(!ps.length)return;
+                h+=`<div class="processor-card">
+                    <h3>${o||'Unassigned'}</h3>
+                    <span class="count">${ps.length} non-prioritized in backlog</span>
+                    <div class="processor-projects">
+                        ${ps.map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}</div>`).join('')}
+                    </div>
+                </div>`;
+            });
+            return h+'</div>';
+        }
+
+        function render(){
+            const f=filter();
+            const c=document.getElementById('container');
+            if(view==='kanban')c.innerHTML=renderK(f);
+            else if(view==='processor')c.innerHTML=renderP(f);
+            else c.innerHTML=renderN(f);
+            document.getElementById('total').textContent=projects.length;
+            document.getElementById('critical').textContent=projects.filter(p=>p.priority==='critical').length;
+            document.getElementById('inprog').textContent=projects.filter(p=>p.status==='in_progress').length;
+        }
+
+        function setupFilters(){
+            const owners=[...new Set(projects.map(p=>p.owner).filter(o=>o))].sort();
+            document.getElementById('fowner').innerHTML='<option value="">All Owners</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('');
+            document.getElementById('powner').innerHTML='<option value="">Select...</option>'+[...new Set([...owners,...team.map(t=>t.name)])].sort().map(o=>`<option value="${o}">${o}</option>`).join('');
+        }
 
         function ds(e){dragId=e.target.dataset.id;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
         function de(e){e.target.classList.remove('dragging');dragId=null;}
         function dov(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
         function dl(e){e.currentTarget.classList.remove('drag-over');}
-        function dr(e){e.preventDefault();e.currentTarget.classList.remove('drag-over');const ns=e.currentTarget.dataset.status;if(dragId&&ns){pRef.child(dragId).update({status:ns,updated:new Date().toISOString().split('T')[0]});}}
+        function dr(e){
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const ns=e.currentTarget.dataset.status;
+            if(dragId&&ns){
+                pRef.child(dragId).update({status:ns,updated:new Date().toISOString().split('T')[0]});
+            }
+        }
 
-        function openModal(st){document.getElementById('pform').reset();document.getElementById('pid').value='';document.getElementById('pstat').value=st||'backlog';document.getElementById('mtitle').textContent='Add Project';document.getElementById('delbtn').style.display='none';document.getElementById('modal').classList.add('active');}
-        function editProj(id){const p=projects.find(x=>x.id===id);if(!p)return;document.getElementById('mtitle').textContent='Edit Project';document.getElementById('pid').value=p.id;document.getElementById('pname').value=p.name;document.getElementById('pdesc').value=p.description||'';document.getElementById('powner').value=p.owner||'';document.getElementById('pext').value=p.external||'';document.getElementById('parea').value=p.area||'';document.getElementById('pprio').value=p.priority;document.getElementById('pstat').value=p.status;document.getElementById('delbtn').style.display='block';document.getElementById('modal').classList.add('active');}
-        function closeModal(){document.getElementById('modal').classList.remove('active');}
-        function delProj(){const id=document.getElementById('pid').value;if(id&&confirm('Delete?')){pRef.child(id).remove();closeModal();}}
+        function openModal(st){
+            document.getElementById('pform').reset();
+            document.getElementById('pid').value='';
+            document.getElementById('pstat').value=st||'backlog';
+            document.getElementById('mtitle').textContent='Add Project';
+            document.getElementById('delbtn').style.display='none';
+            document.getElementById('modal').classList.add('active');
+        }
 
-        document.getElementById('pform').onsubmit=function(e){e.preventDefault();const id=document.getElementById('pid').value;const d={name:document.getElementById('pname').value,description:document.getElementById('pdesc').value,owner:document.getElementById('powner').value,external:document.getElementById('pext').value,area:document.getElementById('parea').value,priority:document.getElementById('pprio').value,status:document.getElementById('pstat').value,updated:new Date().toISOString().split('T')[0]};if(id){pRef.child(id).update(d);}else{d.id='p'+Date.now();d.created=d.updated;pRef.child(d.id).set(d);}closeModal();};
+        function editProj(id){
+            const p=projects.find(x=>x.id===id);
+            if(!p)return;
+            document.getElementById('mtitle').textContent='Edit Project';
+            document.getElementById('pid').value=p.id;
+            document.getElementById('pname').value=p.name;
+            document.getElementById('pdesc').value=p.description||'';
+            document.getElementById('powner').value=p.owner||'';
+            document.getElementById('pext').value=p.external||'';
+            document.getElementById('parea').value=p.area||'';
+            document.getElementById('pprio').value=p.priority;
+            document.getElementById('pstat').value=p.status;
+            document.getElementById('delbtn').style.display='block';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal(){
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function delProj(){
+            const id=document.getElementById('pid').value;
+            if(id&&confirm('Delete this project?')){
+                pRef.child(id).remove();
+                closeModal();
+            }
+        }
+
+        document.getElementById('pform').onsubmit=function(e){
+            e.preventDefault();
+            const id=document.getElementById('pid').value;
+            const d={
+                name:document.getElementById('pname').value,
+                description:document.getElementById('pdesc').value,
+                owner:document.getElementById('powner').value,
+                external:document.getElementById('pext').value,
+                area:document.getElementById('parea').value,
+                priority:document.getElementById('pprio').value,
+                status:document.getElementById('pstat').value,
+                updated:new Date().toISOString().split('T')[0]
+            };
+            if(id){
+                pRef.child(id).update(d);
+            } else {
+                d.id='p'+Date.now();
+                d.created=d.updated;
+                pRef.child(d.id).set(d);
+            }
+            closeModal();
+        };
+
         document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
         document.onkeydown=e=>{if(e.key==='Escape')closeModal();};
     </script>
