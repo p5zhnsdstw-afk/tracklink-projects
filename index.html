@@ -4,11 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Huginn - Tracklink Projects</title>
+
+    <!-- Security: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://www.gstatic.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;
+        img-src 'self' data: https:;
+        frame-ancestors 'none';
+    ">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         /* Tracklink Design System */
         :root {
@@ -23,6 +42,7 @@
             --tl-warning: #f59e0b;
             --tl-error: #ef4444;
             --tl-info: #3b82f6;
+            --tl-purple: #8b5cf6;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,6 +52,166 @@
             background: linear-gradient(135deg, var(--tl-navy) 0%, var(--tl-navy-dark) 100%);
             min-height: 100vh;
             color: var(--tl-white);
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo h1 {
+            font-size: 28px;
+            color: var(--tl-cyan-primary);
+            margin-top: 10px;
+        }
+
+        .login-logo .logo-text {
+            font-size: 16px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: rgba(255,255,255,0.05);
+            color: var(--tl-gray-blue);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .auth-tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .auth-tab.active {
+            background: var(--tl-cyan-primary);
+            color: var(--tl-navy);
+        }
+
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--tl-gray-blue);
+            font-weight: 500;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: var(--tl-white);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--tl-cyan-primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--tl-cyan-primary);
+            color: var(--tl-navy);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--tl-cyan-secondary);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--tl-error);
+            color: var(--tl-error);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .login-error.visible {
+            display: block;
+        }
+
+        .auth-loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--tl-gray-blue);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--tl-cyan-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* App Container (hidden until authenticated) */
+        .app-container {
+            display: none;
+        }
+
+        .app-container.visible {
+            display: block;
         }
 
         /* Header */
@@ -74,6 +254,7 @@
             font-size: 12px;
             color: var(--tl-gray-blue);
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .header-stats strong { color: var(--tl-white); }
@@ -87,6 +268,37 @@
 
         .sync-status.connected { background: var(--tl-success); color: white; }
         .sync-status.disconnected { background: var(--tl-error); color: white; }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .user-email {
+            color: var(--tl-gray-blue);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            padding: 6px 14px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 6px;
+            color: var(--tl-white);
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
 
         /* Views */
         .views {
@@ -145,7 +357,254 @@
             border-color: var(--tl-cyan-primary);
         }
 
-        /* Board */
+        /* Priority Board Layout */
+        .priority-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        .priority-column {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.05);
+            max-height: calc(100vh - 220px);
+        }
+
+        .priority-column-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .priority-column-header h2 {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .priority-column-header .slots-info {
+            font-size: 11px;
+            color: var(--tl-gray-blue);
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .priority-column.high .priority-column-header {
+            background: rgba(245, 158, 11, 0.2);
+        }
+
+        .priority-column.medium .priority-column-header {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .priority-column.low .priority-column-header {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .priority-column-body {
+            padding: 12px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .priority-column-body.drag-over {
+            background: rgba(0, 188, 255, 0.1);
+        }
+
+        /* Priority Slot */
+        .priority-slot {
+            background: rgba(255,255,255,0.02);
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            min-height: 80px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .priority-slot.occupied {
+            border-style: solid;
+            border-color: transparent;
+            background: transparent;
+        }
+
+        .priority-slot.drag-over {
+            border-color: var(--tl-cyan-primary);
+            background: rgba(0, 188, 255, 0.1);
+        }
+
+        .slot-number {
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: var(--tl-navy);
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .priority-slot.high .slot-number { color: var(--tl-warning); }
+        .priority-slot.medium .slot-number { color: var(--tl-info); }
+
+        .slot-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 80px;
+            color: var(--tl-gray-blue);
+            font-size: 12px;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+
+        .card:active { cursor: grabbing; }
+        .card.dragging { opacity: 0.4; }
+
+        .card.high { border-left-color: var(--tl-warning); }
+        .card.medium { border-left-color: var(--tl-info); }
+        .card.low { border-left-color: var(--tl-success); }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .card-slot-badge {
+            background: var(--tl-warning);
+            color: var(--tl-navy);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .card.medium .card-slot-badge {
+            background: var(--tl-info);
+            color: white;
+        }
+
+        .card-priority {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: inline-block;
+            letter-spacing: 0.03em;
+        }
+
+        .card-priority.high { background: var(--tl-warning); color: var(--tl-navy); }
+        .card-priority.medium { background: var(--tl-info); }
+        .card-priority.low { background: var(--tl-success); }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-area {
+            font-size: 10px;
+            color: var(--tl-gray-blue);
+        }
+
+        .card-status {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            color: var(--tl-gray-blue);
+        }
+
+        .card-status.in_progress { background: rgba(245, 158, 11, 0.2); color: var(--tl-warning); }
+        .card-status.review { background: rgba(139, 92, 246, 0.2); color: var(--tl-purple); }
+        .card-status.done { background: rgba(16, 185, 129, 0.2); color: var(--tl-success); }
+
+        .card-footer {
+            font-size: 11px;
+            color: var(--tl-gray-blue);
+            margin-top: 8px;
+        }
+
+        .owner-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--tl-cyan-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--tl-navy);
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .empty-column {
+            text-align: center;
+            padding: 25px 15px;
+            color: var(--tl-gray-blue);
+            font-size: 12px;
+        }
+
+        .add-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            color: var(--tl-gray-blue);
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--tl-cyan-primary);
+            color: var(--tl-cyan-primary);
+        }
+
+        /* Regular Kanban Board */
         .board {
             display: flex;
             gap: 14px;
@@ -208,104 +667,28 @@
         .column.review .column-header { background: rgba(139, 92, 246, 0.25); }
         .column.done .column-header { background: rgba(16, 185, 129, 0.25); }
 
-        /* Cards */
-        .card {
-            background: rgba(255,255,255,0.06);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid;
-            cursor: grab;
-            user-select: none;
-            transition: all 0.2s;
-        }
-
-        .card:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-1px);
-        }
-
-        .card:active { cursor: grabbing; }
-        .card.dragging { opacity: 0.4; }
-
-        .card.critical { border-left-color: var(--tl-error); }
-        .card.high { border-left-color: var(--tl-warning); }
-        .card.medium { border-left-color: var(--tl-info); }
-        .card.low { border-left-color: var(--tl-success); }
-
-        .card-title {
-            font-size: 13px;
-            font-weight: 600;
-            line-height: 1.4;
-            margin-bottom: 6px;
-        }
-
-        .card-priority {
-            font-size: 9px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            font-weight: 700;
-            display: inline-block;
-            margin-bottom: 6px;
-            letter-spacing: 0.03em;
-        }
-
-        .card-priority.critical { background: var(--tl-error); }
-        .card-priority.high { background: var(--tl-warning); color: var(--tl-navy); }
-        .card-priority.medium { background: var(--tl-info); }
-        .card-priority.low { background: var(--tl-success); }
-
-        .card-area {
+        .column-priority-info {
+            display: flex;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(0,0,0,0.2);
             font-size: 10px;
-            color: var(--tl-gray-blue);
-            margin-bottom: 6px;
         }
 
-        .card-footer {
-            font-size: 11px;
-            color: var(--tl-gray-blue);
+        .pri-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
         }
 
-        .owner-avatar {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--tl-cyan-primary);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            font-weight: 700;
-            color: var(--tl-navy);
-            margin-right: 6px;
-            vertical-align: middle;
+        .pri-badge.high {
+            background: rgba(245, 158, 11, 0.3);
+            color: var(--tl-warning);
         }
 
-        .empty-column {
-            text-align: center;
-            padding: 25px 15px;
-            color: var(--tl-gray-blue);
-            font-size: 12px;
-        }
-
-        .add-btn {
-            background: rgba(255,255,255,0.03);
-            border: 1px dashed rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            color: var(--tl-gray-blue);
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 8px;
-            transition: all 0.2s;
-        }
-
-        .add-btn:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--tl-cyan-primary);
-            color: var(--tl-cyan-primary);
+        .pri-badge.medium {
+            background: rgba(59, 130, 246, 0.3);
+            color: var(--tl-info);
         }
 
         /* Processor Grid */
@@ -356,7 +739,6 @@
             background: rgba(255,255,255,0.08);
         }
 
-        .mini-card.critical { border-left-color: var(--tl-error); }
         .mini-card.high { border-left-color: var(--tl-warning); }
         .mini-card.medium { border-left-color: var(--tl-info); }
         .mini-card.low { border-left-color: var(--tl-success); }
@@ -368,6 +750,95 @@
             border-radius: 6px;
             font-size: 10px;
             font-weight: 600;
+        }
+
+        /* Promotion Dialog */
+        .promotion-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .promotion-dialog.active {
+            display: flex;
+        }
+
+        .promotion-content {
+            background: var(--tl-navy);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .promotion-content h2 {
+            color: var(--tl-cyan-primary);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .promotion-content p {
+            color: var(--tl-gray-blue);
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        .promotion-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .promotion-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .promotion-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--tl-cyan-primary);
+        }
+
+        .promotion-item .name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .promotion-item .meta {
+            font-size: 11px;
+            color: var(--tl-gray-blue);
+        }
+
+        .promotion-skip {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .promotion-skip button {
+            background: transparent;
+            border: none;
+            color: var(--tl-gray-blue);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .promotion-skip button:hover {
+            color: var(--tl-white);
         }
 
         /* Modal */
@@ -489,326 +960,1590 @@
         .btn-danger:hover {
             background: #dc2626;
         }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: var(--tl-navy);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            animation: slideIn 0.3s ease;
+            max-width: 350px;
+        }
+
+        .toast.success { border-left: 3px solid var(--tl-success); }
+        .toast.error { border-left: 3px solid var(--tl-error); }
+        .toast.warning { border-left: 3px solid var(--tl-warning); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Rate limit indicator */
+        .rate-limit-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--tl-warning);
+            color: var(--tl-warning);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin: 10px 24px;
+            display: none;
+        }
+
+        .rate-limit-warning.visible {
+            display: block;
+        }
+
+        /* Priority slot help text */
+        .slot-help {
+            font-size: 10px;
+            color: var(--tl-gray-blue);
+            text-align: center;
+            padding: 8px;
+            opacity: 0.7;
+        }
+
+        /* Active Projects Section */
+        .active-projects-section {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin-top: 10px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--tl-cyan-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .active-projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .active-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 14px;
+            border-left: 4px solid var(--tl-warning);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .active-card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .active-card.high { border-left-color: var(--tl-warning); }
+        .active-card.medium { border-left-color: var(--tl-info); }
+        .active-card.low { border-left-color: var(--tl-success); }
+
+        .active-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .was-high-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--tl-warning);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Done Projects Section */
+        .done-projects-section {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .done-projects-section details summary {
+            list-style: none;
+        }
+
+        .done-projects-section details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .done-projects-section details summary::before {
+            content: '▶';
+            margin-right: 8px;
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .done-projects-section details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .done-projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .done-card {
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 3px solid var(--tl-success);
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.8;
+        }
+
+        .done-card:hover {
+            opacity: 1;
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .done-card .card-title {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .done-card .card-meta {
+            font-size: 10px;
+        }
+
+        .more-indicator {
+            text-align: center;
+            padding: 12px;
+            color: var(--tl-gray-blue);
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <span class="logo-text">
-                <span class="logo-track">TRACK</span><span class="logo-link">LINK</span>
-                <span class="logo-chevrons">&lt;&lt;&lt;</span>
-            </span>
-            <h1>Huginn</h1>
+    <!-- Auth Loading State -->
+    <div id="authLoading" class="login-container">
+        <div class="auth-loading">
+            <div class="spinner"></div>
+            <p>Verificando sesión...</p>
         </div>
-        <div class="header-stats">
-            <span class="sync-status disconnected" id="sync">Connecting...</span>
-            <div>Total: <strong id="total">0</strong></div>
-            <div>Critical: <strong id="critical" style="color: var(--tl-error)">0</strong></div>
-            <div>In Progress: <strong id="inprog" style="color: var(--tl-warning)">0</strong></div>
-        </div>
-    </header>
-
-    <div class="views">
-        <button class="view-btn active" onclick="setView('kanban',this)">Kanban</button>
-        <button class="view-btn" onclick="setView('processor',this)">By Processor</button>
-        <button class="view-btn" onclick="setView('nonprio',this)">Non-Prioritized</button>
     </div>
 
-    <div class="filters">
-        <input type="text" id="search" placeholder="Search projects..." oninput="render()">
-        <select id="fprio" onchange="render()">
-            <option value="">All Priorities</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-        </select>
-        <select id="fowner" onchange="render()"></select>
-    </div>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container" style="display: none;">
+        <div class="login-box">
+            <div class="login-logo">
+                <span class="logo-text">
+                    <span class="logo-track">TRACK</span><span class="logo-link">LINK</span>
+                </span>
+                <h1>Huginn</h1>
+            </div>
 
-    <div id="container"></div>
+            <!-- Auth Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="loginTab" onclick="showAuthTab('login')">Iniciar Sesión</button>
+                <button class="auth-tab" id="registerTab" onclick="showAuthTab('register')">Registrarse</button>
+            </div>
 
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 id="mtitle">Edit Project</h2>
-            <form id="pform">
-                <input type="hidden" id="pid">
+            <div id="loginError" class="login-error"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label>Name *</label>
-                    <input type="text" id="pname" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="pdesc"></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Owner</label>
-                        <select id="powner"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>External</label>
-                        <input type="text" id="pext">
-                    </div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required autocomplete="email" placeholder="tu@tracklink.ec">
                 </div>
                 <div class="form-group">
-                    <label>Area</label>
-                    <input type="text" id="parea">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select id="pprio">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="pstat">
-                            <option value="backlog">Backlog</option>
-                            <option value="todo">To Do</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="review">Review</option>
-                            <option value="done">Done</option>
-                        </select>
-                    </div>
+                <button type="submit" class="login-btn" id="loginBtn">Iniciar Sesión</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="login-form" style="display: none;">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required autocomplete="email" placeholder="tu@tracklink.ec">
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="delbtn" style="display:none" onclick="delProj()">Delete</button>
+                <div class="form-group">
+                    <label for="registerPassword">Contraseña</label>
+                    <input type="password" id="registerPassword" required autocomplete="new-password" placeholder="Mínimo 6 caracteres">
                 </div>
+                <div class="form-group">
+                    <label for="registerPasswordConfirm">Confirmar Contraseña</label>
+                    <input type="password" id="registerPasswordConfirm" required autocomplete="new-password" placeholder="Repite la contraseña">
+                </div>
+                <button type="submit" class="login-btn" id="registerBtn">Crear Cuenta</button>
             </form>
         </div>
     </div>
 
+    <!-- Main Application (hidden until authenticated) -->
+    <div id="appContainer" class="app-container">
+        <header>
+            <div class="logo">
+                <span class="logo-text">
+                    <span class="logo-track">TRACK</span><span class="logo-link">LINK</span>
+                    <span class="logo-chevrons">&lt;&lt;&lt;</span>
+                </span>
+                <h1>Huginn</h1>
+            </div>
+            <div class="header-stats">
+                <span class="sync-status disconnected" id="sync">Connecting...</span>
+                <div>Backlog: <strong id="backlogCount">0</strong></div>
+                <div>High (1-4): <strong id="highCount" style="color: var(--tl-warning)">0</strong>/4</div>
+                <div>Medium (5-8): <strong id="mediumCount" style="color: var(--tl-info)">0</strong>/4</div>
+                <div>En Progreso: <strong id="activeCount" style="color: var(--tl-purple)">0</strong></div>
+                <div class="user-info">
+                    <span class="user-email" id="userEmail"></span>
+                    <button class="logout-btn" onclick="handleLogout()">Cerrar Sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="views">
+            <button class="view-btn active" onclick="setView('priority',this)">Priority Board</button>
+            <button class="view-btn" onclick="setView('kanban',this)">Kanban</button>
+            <button class="view-btn" onclick="setView('processor',this)">By Processor</button>
+        </div>
+
+        <div id="rateLimitWarning" class="rate-limit-warning">
+            ⚠️ Demasiadas acciones. Por favor espera unos segundos antes de continuar.
+        </div>
+
+        <div class="filters">
+            <input type="text" id="search" placeholder="Search projects..." oninput="render()">
+            <select id="fowner" onchange="render()"></select>
+        </div>
+
+        <div id="container"></div>
+
+        <!-- Promotion Dialog -->
+        <div class="promotion-dialog" id="promotionDialog">
+            <div class="promotion-content">
+                <h2>🎉 Proyecto Completado</h2>
+                <p>Un slot de alta prioridad está disponible. Selecciona un proyecto de prioridad media para promover:</p>
+                <div class="promotion-list" id="promotionList"></div>
+                <div class="promotion-skip">
+                    <button onclick="closePromotionDialog()">Omitir por ahora</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Modal -->
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <h2 id="mtitle">Edit Project</h2>
+                <form id="pform">
+                    <input type="hidden" id="pid">
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" id="pname" required maxlength="200">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="pdesc" maxlength="2000"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Owner</label>
+                            <select id="powner"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>External</label>
+                            <input type="text" id="pext" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Area</label>
+                        <input type="text" id="parea" maxlength="100">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="pprio">
+                                <option value="low">Low (Backlog)</option>
+                                <option value="medium">Medium (5-8)</option>
+                                <option value="high">High (1-4)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="pstat">
+                                <option value="backlog">Backlog</option>
+                                <option value="todo">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="review">Review</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Priority slots are auto-assigned, no manual selection needed -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="delbtn" style="display:none" onclick="delProj()">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script>
-        firebase.initializeApp({databaseURL:"https://tracklink-projects-default-rtdb.firebaseio.com"});
-        const db=firebase.database(), pRef=db.ref('projects'), tRef=db.ref('team');
-        let projects=[],team=[],view='kanban',dragId=null;
-        const cols=[
-            {id:'backlog',n:'Backlog',i:''},
-            {id:'todo',n:'To Do',i:''},
-            {id:'in_progress',n:'In Progress',i:''},
-            {id:'review',n:'Review',i:''},
-            {id:'done',n:'Done',i:''}
+        // ============================================
+        // SECURITY: Input Sanitization
+        // ============================================
+        const SecurityUtils = {
+            escapeHtml: function(str) {
+                if (typeof str !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            },
+
+            sanitizeInput: function(str, maxLength = 500) {
+                if (typeof str !== 'string') return '';
+                let clean = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+                clean = clean.trim().substring(0, maxLength);
+                return clean;
+            },
+
+            isValidEmail: function(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email) && email.length <= 254;
+            },
+
+            isAllowedValue: function(value, allowedValues) {
+                return allowedValues.includes(value);
+            },
+
+            generateId: function() {
+                return 'p' + Date.now() + Math.random().toString(36).substr(2, 9);
+            }
+        };
+
+        // ============================================
+        // SECURITY: Rate Limiting
+        // ============================================
+        const RateLimiter = {
+            actions: [],
+            maxActions: 30,
+            timeWindow: 60000,
+
+            canProceed: function() {
+                const now = Date.now();
+                this.actions = this.actions.filter(t => now - t < this.timeWindow);
+                if (this.actions.length >= this.maxActions) {
+                    this.showWarning();
+                    return false;
+                }
+                this.actions.push(now);
+                this.hideWarning();
+                return true;
+            },
+
+            showWarning: function() {
+                const warning = document.getElementById('rateLimitWarning');
+                if (warning) warning.classList.add('visible');
+            },
+
+            hideWarning: function() {
+                const warning = document.getElementById('rateLimitWarning');
+                if (warning) warning.classList.remove('visible');
+            }
+        };
+
+        // ============================================
+        // LOGGING
+        // ============================================
+        const Logger = {
+            log: function(level, message, data = {}) {
+                const timestamp = new Date().toISOString();
+                const sanitized = { ...data };
+                ['password', 'token', 'apiKey', 'secret', 'email'].forEach(f => {
+                    if (f in sanitized) sanitized[f] = '[REDACTED]';
+                });
+                if (level === 'error') console.error(`[${timestamp}] ERROR:`, message, sanitized);
+                else if (level === 'warn') console.warn(`[${timestamp}] WARN:`, message, sanitized);
+                else console.log(`[${timestamp}] INFO:`, message, sanitized);
+            },
+            error: function(m, d) { this.log('error', m, d); },
+            warn: function(m, d) { this.log('warn', m, d); },
+            info: function(m, d) { this.log('info', m, d); }
+        };
+
+        // ============================================
+        // TOAST
+        // ============================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = SecurityUtils.escapeHtml(message);
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ============================================
+        // FIREBASE INITIALIZATION
+        // ============================================
+        let db, pRef, tRef, auth;
+        let currentUser = null;
+        let projects = [];
+        let team = [];
+        let view = 'priority';
+        let dragId = null;
+        let isInitialized = false;
+        let pendingPromotion = null;
+
+        const ALLOWED_PRIORITIES = ['high', 'medium', 'low'];
+        const ALLOWED_STATUSES = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+        const HIGH_SLOTS = [1, 2, 3, 4];
+        const MEDIUM_SLOTS = [5, 6, 7, 8];
+
+        const statusCols = [
+            { id: 'backlog', n: 'Backlog' },
+            { id: 'todo', n: 'To Do' },
+            { id: 'in_progress', n: 'In Progress' },
+            { id: 'review', n: 'Review' },
+            { id: 'done', n: 'Done' }
         ];
 
-        db.ref('.info/connected').on('value',s=>{
-            const e=document.getElementById('sync');
-            if(s.val()){
-                e.textContent='Live';
-                e.className='sync-status connected';
-            } else {
-                e.textContent='Offline';
-                e.className='sync-status disconnected';
+        try {
+            firebase.initializeApp({
+                apiKey: "AIzaSyAa0FjFFyuWfVOP3r6_5C0AB7NPDMA9ePk",
+                authDomain: "tracklink-projects.firebaseapp.com",
+                databaseURL: "https://tracklink-projects-default-rtdb.firebaseio.com",
+                projectId: "tracklink-projects",
+                storageBucket: "tracklink-projects.firebasestorage.app",
+                messagingSenderId: "388276796592",
+                appId: "1:388276796592:web:59fbd5ebe95a2006b10f75"
+            });
+            auth = firebase.auth();
+            db = firebase.database();
+            pRef = db.ref('projects');
+            tRef = db.ref('team');
+            Logger.info('Firebase initialized successfully');
+        } catch (error) {
+            Logger.error('Firebase initialization failed', { error: error.message });
+            showToast('Error al conectar con la base de datos', 'error');
+        }
+
+        // ============================================
+        // PRIORITY SYSTEM
+        // ============================================
+        const PrioritySystem = {
+            // Only projects in Backlog occupy priority slots
+            getHighPriorityProjects: function() {
+                return projects
+                    .filter(p => p.priority === 'high' && p.prioritySlot >= 1 && p.prioritySlot <= 4 && p.status === 'backlog')
+                    .sort((a, b) => a.prioritySlot - b.prioritySlot);
+            },
+
+            getMediumPriorityProjects: function() {
+                return projects
+                    .filter(p => p.priority === 'medium' && p.prioritySlot >= 5 && p.prioritySlot <= 8 && p.status === 'backlog')
+                    .sort((a, b) => a.prioritySlot - b.prioritySlot);
+            },
+
+            getLowPriorityProjects: function() {
+                return projects.filter(p =>
+                    (p.priority === 'low' && p.status === 'backlog') ||
+                    (!p.prioritySlot && p.priority !== 'high' && p.status === 'backlog')
+                );
+            },
+
+            // Get projects that have left backlog (in progress)
+            getActiveProjects: function() {
+                return projects.filter(p => p.status !== 'backlog' && p.status !== 'done');
+            },
+
+            // Get completed projects
+            getCompletedProjects: function() {
+                return projects.filter(p => p.status === 'done');
+            },
+
+            getAvailableHighSlot: function() {
+                const usedSlots = this.getHighPriorityProjects().map(p => p.prioritySlot);
+                return HIGH_SLOTS.find(s => !usedSlots.includes(s)) || null;
+            },
+
+            getAvailableMediumSlot: function() {
+                const usedSlots = this.getMediumPriorityProjects().map(p => p.prioritySlot);
+                return MEDIUM_SLOTS.find(s => !usedSlots.includes(s)) || null;
+            },
+
+            isSlotAvailable: function(slot) {
+                // Slot is available if no project in backlog is using it
+                return !projects.some(p => p.prioritySlot === slot && p.status === 'backlog');
+            },
+
+            getMediumCandidatesForPromotion: function() {
+                return projects.filter(p =>
+                    p.priority === 'medium' &&
+                    p.prioritySlot >= 5 &&
+                    p.prioritySlot <= 8 &&
+                    p.status === 'backlog'
+                ).sort((a, b) => a.prioritySlot - b.prioritySlot);
+            },
+
+            // Check for promotion when a high priority project leaves backlog
+            checkForPromotion: async function(projectId, trigger = 'left_backlog') {
+                const project = projects.find(p => p.id === projectId);
+                if (!project) return;
+
+                // Only trigger for high priority projects
+                if (project.priority !== 'high') return;
+
+                const freedSlot = project.prioritySlot;
+                if (!freedSlot || freedSlot < 1 || freedSlot > 4) return;
+
+                const candidates = this.getMediumCandidatesForPromotion();
+                if (candidates.length === 0) {
+                    Logger.info('No medium priority candidates for promotion');
+                    return;
+                }
+
+                pendingPromotion = { freedSlot, candidates, trigger };
+                this.showPromotionDialog();
+            },
+
+            showPromotionDialog: function() {
+                if (!pendingPromotion) return;
+
+                const triggerText = pendingPromotion.trigger === 'left_backlog'
+                    ? 'Un proyecto de alta prioridad salió del Backlog.'
+                    : 'Un proyecto de alta prioridad fue completado.';
+
+                document.querySelector('#promotionDialog .promotion-content p').textContent =
+                    `${triggerText} Selecciona un proyecto de prioridad media para promover al slot #${pendingPromotion.freedSlot}:`;
+
+                const list = document.getElementById('promotionList');
+                list.innerHTML = pendingPromotion.candidates.map(p => `
+                    <div class="promotion-item" onclick="promoteProject('${SecurityUtils.escapeHtml(p.id)}')">
+                        <div class="name">${SecurityUtils.escapeHtml(p.name)}</div>
+                        <div class="meta">
+                            Slot ${p.prioritySlot} · ${SecurityUtils.escapeHtml(p.owner || 'Sin asignar')} · ${SecurityUtils.escapeHtml(p.area || 'Sin área')}
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('promotionDialog').classList.add('active');
+            },
+
+            // Clear slot when project leaves backlog
+            clearSlotOnExit: async function(projectId) {
+                const project = projects.find(p => p.id === projectId);
+                if (!project || !project.prioritySlot) return;
+
+                // Project keeps its priority label but loses the slot
+                // The slot is now free for promotion
+                try {
+                    await pRef.child(projectId).update({
+                        prioritySlot: null,
+                        updated: new Date().toISOString().split('T')[0],
+                        updatedBy: currentUser ? currentUser.uid : 'unknown'
+                    });
+                    Logger.info('Slot cleared on backlog exit', { projectId, oldSlot: project.prioritySlot });
+                } catch (error) {
+                    Logger.error('Failed to clear slot', { error: error.message });
+                }
+            }
+        };
+
+        async function promoteProject(projectId) {
+            if (!pendingPromotion || !RateLimiter.canProceed()) return;
+
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const oldSlot = project.prioritySlot;
+            const newSlot = pendingPromotion.freedSlot;
+
+            try {
+                await pRef.child(projectId).update({
+                    priority: 'high',
+                    prioritySlot: newSlot,
+                    updated: new Date().toISOString().split('T')[0],
+                    updatedBy: currentUser ? currentUser.uid : 'unknown'
+                });
+
+                Logger.info('Project promoted', { projectId, from: oldSlot, to: newSlot });
+                showToast(`Proyecto promovido al slot ${newSlot}`);
+                closePromotionDialog();
+            } catch (error) {
+                Logger.error('Promotion failed', { error: error.message });
+                showToast('Error al promover el proyecto', 'error');
+            }
+        }
+
+        function closePromotionDialog() {
+            pendingPromotion = null;
+            document.getElementById('promotionDialog').classList.remove('active');
+        }
+
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+        function showScreen(screen) {
+            document.getElementById('authLoading').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.remove('visible');
+
+            switch (screen) {
+                case 'loading':
+                    document.getElementById('authLoading').style.display = 'flex';
+                    break;
+                case 'login':
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    break;
+                case 'app':
+                    document.getElementById('appContainer').classList.add('visible');
+                    break;
+            }
+        }
+
+        auth.onAuthStateChanged(function(user) {
+            try {
+                if (user) {
+                    currentUser = user;
+                    Logger.info('User authenticated', { uid: user.uid });
+                    document.getElementById('userEmail').textContent = user.email || '';
+                    showScreen('app');
+                    initializeDataListeners();
+                } else {
+                    currentUser = null;
+                    Logger.info('User signed out');
+                    showScreen('login');
+                    cleanupDataListeners();
+                }
+            } catch (error) {
+                Logger.error('Auth state change error', { error: error.message });
+                showScreen('login');
             }
         });
 
-        pRef.on('value',s=>{
-            const d=s.val();
-            projects=d?Object.keys(d).map(k=>({...d[k],id:k})):[];
-            render();
-            setupFilters();
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('loginError');
+
+            if (!SecurityUtils.isValidEmail(email)) {
+                errorDiv.textContent = 'Por favor ingresa un email válido';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            // Only allow @tracklink.ec emails
+            if (!email.toLowerCase().endsWith('@tracklink.ec')) {
+                errorDiv.textContent = 'Solo se permite acceso con email @tracklink.ec';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            if (!RateLimiter.canProceed()) {
+                errorDiv.textContent = 'Demasiados intentos. Espera un momento.';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Iniciando sesión...';
+            errorDiv.classList.remove('visible');
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                Logger.info('Login successful');
+            } catch (error) {
+                Logger.error('Login failed', { code: error.code });
+                let errorMessage = 'Error al iniciar sesión';
+                switch (error.code) {
+                    case 'auth/invalid-email': errorMessage = 'Email inválido'; break;
+                    case 'auth/user-disabled': errorMessage = 'Usuario deshabilitado'; break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential': errorMessage = 'Email o contraseña incorrectos'; break;
+                    case 'auth/too-many-requests': errorMessage = 'Demasiados intentos. Intenta más tarde.'; break;
+                }
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.add('visible');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+            }
         });
 
-        tRef.on('value',s=>{
-            const d=s.val();
-            team=d?Object.values(d):[];
-            setupFilters();
-        });
+        // Auth Tab Switching
+        function showAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const errorDiv = document.getElementById('loginError');
 
-        function gi(o){
-            if(!o)return'?';
-            const m=team.find(t=>t.name===o);
-            if(m)return m.initials;
-            const w=o.split(' ');
-            return w.length>=2?(w[0][0]+w[1][0]).toUpperCase():o.substring(0,2).toUpperCase();
+            errorDiv.classList.remove('visible');
+            errorDiv.textContent = '';
+
+            if (tab === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+            }
         }
 
-        function filter(){
-            const s=document.getElementById('search').value.toLowerCase();
-            const p=document.getElementById('fprio').value;
-            const o=document.getElementById('fowner').value;
-            return projects.filter(x=>{
-                if(s&&!x.name.toLowerCase().includes(s)&&!(x.description||'').toLowerCase().includes(s))return false;
-                if(p&&x.priority!==p)return false;
-                if(o&&x.owner!==o)return false;
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            const registerBtn = document.getElementById('registerBtn');
+            const errorDiv = document.getElementById('loginError');
+
+            if (!SecurityUtils.isValidEmail(email)) {
+                errorDiv.textContent = 'Por favor ingresa un email válido';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            // Only allow @tracklink.ec emails
+            if (!email.toLowerCase().endsWith('@tracklink.ec')) {
+                errorDiv.textContent = 'Solo se permite registro con email @tracklink.ec';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = 'La contraseña debe tener al menos 6 caracteres';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                errorDiv.textContent = 'Las contraseñas no coinciden';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            if (!RateLimiter.canProceed()) {
+                errorDiv.textContent = 'Demasiados intentos. Espera un momento.';
+                errorDiv.classList.add('visible');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Creando cuenta...';
+            errorDiv.classList.remove('visible');
+
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                Logger.info('Registration successful');
+                showToast('¡Cuenta creada exitosamente!', 'success');
+            } catch (error) {
+                Logger.error('Registration failed', { code: error.code });
+                let errorMessage = 'Error al crear la cuenta';
+                switch (error.code) {
+                    case 'auth/email-already-in-use': errorMessage = 'Este email ya está registrado'; break;
+                    case 'auth/invalid-email': errorMessage = 'Email inválido'; break;
+                    case 'auth/weak-password': errorMessage = 'La contraseña es muy débil'; break;
+                    case 'auth/too-many-requests': errorMessage = 'Demasiados intentos. Intenta más tarde.'; break;
+                }
+                errorDiv.textContent = errorMessage;
+                errorDiv.classList.add('visible');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Crear Cuenta';
+            }
+        });
+
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                showToast('Sesión cerrada correctamente');
+            } catch (error) {
+                Logger.error('Logout failed', { error: error.message });
+                showToast('Error al cerrar sesión', 'error');
+            }
+        }
+
+        // ============================================
+        // DATA LISTENERS
+        // ============================================
+        let projectsListener = null;
+        let teamListener = null;
+        let connectionListener = null;
+
+        function initializeDataListeners() {
+            if (isInitialized) return;
+
+            try {
+                connectionListener = db.ref('.info/connected').on('value', function(s) {
+                    const e = document.getElementById('sync');
+                    if (s.val()) {
+                        e.textContent = 'Live';
+                        e.className = 'sync-status connected';
+                    } else {
+                        e.textContent = 'Offline';
+                        e.className = 'sync-status disconnected';
+                    }
+                });
+
+                projectsListener = pRef.on('value', function(s) {
+                    try {
+                        const d = s.val();
+                        projects = d ? Object.keys(d).map(k => ({ ...d[k], id: k })) : [];
+                        render();
+                        setupFilters();
+                    } catch (error) {
+                        Logger.error('Error processing projects data', { error: error.message });
+                    }
+                }, function(error) {
+                    Logger.error('Projects listener error', { error: error.message });
+                    showToast('Error al cargar proyectos', 'error');
+                });
+
+                teamListener = tRef.on('value', function(s) {
+                    try {
+                        const d = s.val();
+                        team = d ? Object.values(d) : [];
+                        setupFilters();
+                    } catch (error) {
+                        Logger.error('Error processing team data', { error: error.message });
+                    }
+                }, function(error) {
+                    Logger.error('Team listener error', { error: error.message });
+                });
+
+                isInitialized = true;
+                Logger.info('Data listeners initialized');
+            } catch (error) {
+                Logger.error('Failed to initialize data listeners', { error: error.message });
+                showToast('Error al conectar con la base de datos', 'error');
+            }
+        }
+
+        function cleanupDataListeners() {
+            try {
+                if (projectsListener) pRef.off('value', projectsListener);
+                if (teamListener) tRef.off('value', teamListener);
+                if (connectionListener) db.ref('.info/connected').off('value', connectionListener);
+                projectsListener = null;
+                teamListener = null;
+                connectionListener = null;
+                isInitialized = false;
+                projects = [];
+                team = [];
+                Logger.info('Data listeners cleaned up');
+            } catch (error) {
+                Logger.error('Error cleaning up listeners', { error: error.message });
+            }
+        }
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        function gi(o) {
+            if (!o) return '?';
+            const m = team.find(t => t.name === o);
+            if (m) return SecurityUtils.escapeHtml(m.initials);
+            const w = o.split(' ');
+            const initials = w.length >= 2 ? (w[0][0] + w[1][0]).toUpperCase() : o.substring(0, 2).toUpperCase();
+            return SecurityUtils.escapeHtml(initials);
+        }
+
+        function filter() {
+            const s = SecurityUtils.sanitizeInput(document.getElementById('search').value, 100).toLowerCase();
+            const o = document.getElementById('fowner').value;
+
+            return projects.filter(x => {
+                if (s && !x.name.toLowerCase().includes(s) && !(x.description || '').toLowerCase().includes(s)) return false;
+                if (o && x.owner !== o) return false;
                 return true;
             });
         }
 
-        function setView(v,btn){
-            view=v;
-            document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+        function setView(v, btn) {
+            view = v;
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             render();
         }
 
-        function card(p){
-            return`<div class="card ${p.priority}" draggable="true" data-id="${p.id}" ondragstart="ds(event)" ondragend="de(event)" onclick="editProj('${p.id}')">
-                <span class="card-priority ${p.priority}">${p.priority}</span>
-                <div class="card-title">${p.name}</div>
-                ${p.area?`<div class="card-area">${p.area}</div>`:''}
+        // ============================================
+        // CARD RENDERING
+        // ============================================
+        function priorityCard(p) {
+            const escapedId = SecurityUtils.escapeHtml(p.id);
+            const escapedName = SecurityUtils.escapeHtml(p.name);
+            const escapedPriority = SecurityUtils.escapeHtml(p.priority);
+            const escapedArea = p.area ? SecurityUtils.escapeHtml(p.area) : '';
+            const escapedOwner = p.owner ? SecurityUtils.escapeHtml(p.owner) : 'Sin asignar';
+            const escapedStatus = SecurityUtils.escapeHtml(p.status || 'backlog');
+
+            return `<div class="card ${escapedPriority}" draggable="true" data-id="${escapedId}" ondragstart="ds(event)" ondragend="de(event)" onclick="editProj('${escapedId}')">
+                <div class="card-header">
+                    ${p.prioritySlot ? `<span class="card-slot-badge">#${p.prioritySlot}</span>` : ''}
+                    <span class="card-priority ${escapedPriority}">${escapedPriority}</span>
+                </div>
+                <div class="card-title">${escapedName}</div>
+                <div class="card-meta">
+                    ${escapedArea ? `<span class="card-area">${escapedArea}</span>` : ''}
+                    <span class="card-status ${escapedStatus}">${escapedStatus.replace('_', ' ')}</span>
+                </div>
                 <div class="card-footer">
-                    <span class="owner-avatar">${gi(p.owner)}</span>${p.owner||'Unassigned'}
+                    <span class="owner-avatar">${gi(p.owner)}</span>${escapedOwner}
                 </div>
             </div>`;
         }
 
-        function renderK(f){
-            let h='<div class="board">';
-            cols.forEach(c=>{
-                const ps=f.filter(p=>p.status===c.id);
-                h+=`<div class="column ${c.id}">
+        function renderPriorityBoard(f) {
+            // Only backlog projects occupy priority slots
+            const highProjects = f.filter(p => p.priority === 'high' && p.prioritySlot >= 1 && p.prioritySlot <= 4 && p.status === 'backlog');
+            const mediumProjects = f.filter(p => p.priority === 'medium' && p.prioritySlot >= 5 && p.prioritySlot <= 8 && p.status === 'backlog');
+            const lowProjects = f.filter(p =>
+                p.status === 'backlog' && (
+                    p.priority === 'low' ||
+                    (!p.prioritySlot && p.priority !== 'high' && p.priority !== 'medium') ||
+                    (p.priority === 'high' && !p.prioritySlot) ||
+                    (p.priority === 'medium' && !p.prioritySlot)
+                )
+            );
+            // Projects in progress (left backlog but not done)
+            const activeProjects = f.filter(p => p.status !== 'backlog' && p.status !== 'done');
+            // Completed projects
+            const doneProjects = f.filter(p => p.status === 'done');
+
+            let h = '<div class="priority-board">';
+
+            // High Priority Column (1-4)
+            h += `<div class="priority-column high">
+                <div class="priority-column-header">
+                    <h2>🔥 High Priority</h2>
+                    <div class="slots-info">Slots 1-4 · ${highProjects.length}/4 filled</div>
+                </div>
+                <div class="priority-column-body" data-priority="high" ondragover="dov(event)" ondragleave="dl(event)" ondrop="drPriority(event)">`;
+
+            for (let slot = 1; slot <= 4; slot++) {
+                const project = highProjects.find(p => p.prioritySlot === slot);
+                if (project) {
+                    h += `<div class="priority-slot high occupied" data-slot="${slot}">
+                        <span class="slot-number">#${slot}</span>
+                        ${priorityCard(project)}
+                    </div>`;
+                } else {
+                    h += `<div class="priority-slot high" data-slot="${slot}" ondragover="dov(event)" ondragleave="dl(event)" ondrop="drSlot(event)">
+                        <span class="slot-number">#${slot}</span>
+                        <div class="slot-empty">Drop project here</div>
+                    </div>`;
+                }
+            }
+
+            h += `<div class="add-btn" onclick="openModal('high')">+ Add High Priority</div>
+                </div>
+            </div>`;
+
+            // Medium Priority Column (5-8)
+            h += `<div class="priority-column medium">
+                <div class="priority-column-header">
+                    <h2>📋 Medium Priority</h2>
+                    <div class="slots-info">Slots 5-8 · ${mediumProjects.length}/4 filled (optional)</div>
+                </div>
+                <div class="priority-column-body" data-priority="medium" ondragover="dov(event)" ondragleave="dl(event)" ondrop="drPriority(event)">`;
+
+            for (let slot = 5; slot <= 8; slot++) {
+                const project = mediumProjects.find(p => p.prioritySlot === slot);
+                if (project) {
+                    h += `<div class="priority-slot medium occupied" data-slot="${slot}">
+                        <span class="slot-number">#${slot}</span>
+                        ${priorityCard(project)}
+                    </div>`;
+                } else {
+                    h += `<div class="priority-slot medium" data-slot="${slot}" ondragover="dov(event)" ondragleave="dl(event)" ondrop="drSlot(event)">
+                        <span class="slot-number">#${slot}</span>
+                        <div class="slot-empty">Optional</div>
+                    </div>`;
+                }
+            }
+
+            h += `<div class="add-btn" onclick="openModal('medium')">+ Add Medium Priority</div>
+                </div>
+            </div>`;
+
+            // Low Priority Column (Backlog)
+            h += `<div class="priority-column low">
+                <div class="priority-column-header">
+                    <h2>📦 Low Priority / Backlog</h2>
+                    <div class="slots-info">${lowProjects.length} projects</div>
+                </div>
+                <div class="priority-column-body" data-priority="low" ondragover="dov(event)" ondragleave="dl(event)" ondrop="drPriority(event)">`;
+
+            if (lowProjects.length) {
+                lowProjects.forEach(p => {
+                    h += priorityCard(p);
+                });
+            } else {
+                h += '<div class="empty-column">No low priority projects</div>';
+            }
+
+            h += `<div class="add-btn" onclick="openModal('low')">+ Add to Backlog</div>
+                </div>
+            </div>`;
+
+            h += '</div>';
+
+            // Active Projects Section (In Progress)
+            if (activeProjects.length > 0) {
+                h += `<div class="active-projects-section">
+                    <h3 class="section-title">🚀 En Progreso (${activeProjects.length})</h3>
+                    <div class="active-projects-grid">`;
+
+                activeProjects.forEach(p => {
+                    h += `<div class="active-card ${SecurityUtils.escapeHtml(p.priority)}" onclick="editProj('${SecurityUtils.escapeHtml(p.id)}')">
+                        <div class="active-card-header">
+                            <span class="card-status ${SecurityUtils.escapeHtml(p.status)}">${SecurityUtils.escapeHtml(p.status.replace('_', ' '))}</span>
+                            ${p.priority === 'high' ? '<span class="was-high-badge">ex-High</span>' : ''}
+                        </div>
+                        <div class="card-title">${SecurityUtils.escapeHtml(p.name)}</div>
+                        <div class="card-footer">
+                            <span class="owner-avatar">${gi(p.owner)}</span>${SecurityUtils.escapeHtml(p.owner || 'Sin asignar')}
+                        </div>
+                    </div>`;
+                });
+
+                h += '</div></div>';
+            }
+
+            // Done Projects Section (Collapsed by default)
+            if (doneProjects.length > 0) {
+                h += `<div class="done-projects-section">
+                    <details>
+                        <summary class="section-title">✅ Completados (${doneProjects.length})</summary>
+                        <div class="done-projects-grid">`;
+
+                doneProjects.slice(0, 20).forEach(p => {
+                    h += `<div class="done-card" onclick="editProj('${SecurityUtils.escapeHtml(p.id)}')">
+                        <div class="card-title">${SecurityUtils.escapeHtml(p.name)}</div>
+                        <div class="card-meta">
+                            <span class="card-area">${SecurityUtils.escapeHtml(p.area || '')}</span>
+                            <span>${SecurityUtils.escapeHtml(p.owner || 'Sin asignar')}</span>
+                        </div>
+                    </div>`;
+                });
+
+                if (doneProjects.length > 20) {
+                    h += `<div class="more-indicator">+${doneProjects.length - 20} más completados</div>`;
+                }
+
+                h += '</div></details></div>';
+            }
+
+            return h;
+        }
+
+        function renderKanban(f) {
+            let h = '<div class="board">';
+            statusCols.forEach(c => {
+                const ps = f.filter(p => p.status === c.id);
+                // Sort: in backlog by slot, otherwise by priority
+                const sorted = ps.sort((a, b) => {
+                    if (c.id === 'backlog') {
+                        // Sort by priority slot for backlog
+                        const slotA = a.prioritySlot || 999;
+                        const slotB = b.prioritySlot || 999;
+                        return slotA - slotB;
+                    }
+                    // For other columns, sort by original priority
+                    const prioOrder = { high: 1, medium: 2, low: 3 };
+                    return (prioOrder[a.priority] || 3) - (prioOrder[b.priority] || 3);
+                });
+
+                const highCount = ps.filter(p => p.priority === 'high' && p.prioritySlot).length;
+                const medCount = ps.filter(p => p.priority === 'medium' && p.prioritySlot).length;
+
+                h += `<div class="column ${c.id}">
                     <div class="column-header">
-                        <h2>${c.n}</h2>
+                        <h2>${SecurityUtils.escapeHtml(c.n)}</h2>
                         <span class="column-count">${ps.length}</span>
                     </div>
+                    ${c.id === 'backlog' && (highCount || medCount) ?
+                        `<div class="column-priority-info">
+                            ${highCount ? `<span class="pri-badge high">${highCount} High</span>` : ''}
+                            ${medCount ? `<span class="pri-badge medium">${medCount} Med</span>` : ''}
+                        </div>` : ''}
                     <div class="column-body" data-status="${c.id}" ondragover="dov(event)" ondragleave="dl(event)" ondrop="dr(event)">
-                        ${ps.length?ps.map(card).join(''):'<div class="empty-column">Drop here</div>'}
+                        ${sorted.length ? sorted.map(priorityCard).join('') : '<div class="empty-column">Drop here</div>'}
                         <div class="add-btn" onclick="openModal('${c.id}')">+ Add Project</div>
                     </div>
                 </div>`;
             });
-            return h+'</div>';
+            return h + '</div>';
         }
 
-        function renderP(f){
-            const owners=[...new Set(projects.map(p=>p.owner))].sort();
-            let h='<div class="processor-grid">';
-            owners.forEach(o=>{
-                const ps=f.filter(p=>p.owner===o);
-                if(!ps.length)return;
-                const cr=ps.filter(p=>p.priority==='critical').length;
-                const hi=ps.filter(p=>p.priority==='high').length;
-                const ip=ps.filter(p=>p.status==='in_progress').length;
-                const warn=ip===0?' <span class="warning-badge">No active</span>':'';
-                h+=`<div class="processor-card">
-                    <h3>${o||'Unassigned'}${warn}</h3>
-                    <span class="count">${ps.length} projects | ${cr} critical | ${hi} high</span>
+        function renderProcessor(f) {
+            const owners = [...new Set(projects.map(p => p.owner))].sort();
+            let h = '<div class="processor-grid">';
+            owners.forEach(o => {
+                const ps = f.filter(p => p.owner === o);
+                if (!ps.length) return;
+                const high = ps.filter(p => p.priority === 'high' && p.prioritySlot).length;
+                const medium = ps.filter(p => p.priority === 'medium' && p.prioritySlot).length;
+                const escapedOwner = SecurityUtils.escapeHtml(o || 'Sin asignar');
+
+                h += `<div class="processor-card">
+                    <h3>${escapedOwner}</h3>
+                    <span class="count">${ps.length} projects | ${high} high | ${medium} medium</span>
                     <div class="processor-projects">
-                        ${ps.slice(0,10).map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}<br><small style="color:var(--tl-gray-blue)">${p.status}</small></div>`).join('')}
-                        ${ps.length>10?`<div style="color:var(--tl-gray-blue);font-size:11px;text-align:center;padding:8px">+${ps.length-10} more</div>`:''}
+                        ${ps.slice(0, 10).map(p => `<div class="mini-card ${SecurityUtils.escapeHtml(p.priority)}" onclick="editProj('${SecurityUtils.escapeHtml(p.id)}')">${p.prioritySlot ? `<strong>#${p.prioritySlot}</strong> ` : ''}${SecurityUtils.escapeHtml(p.name)}<br><small style="color:var(--tl-gray-blue)">${SecurityUtils.escapeHtml(p.status)}</small></div>`).join('')}
+                        ${ps.length > 10 ? `<div style="color:var(--tl-gray-blue);font-size:11px;text-align:center;padding:8px">+${ps.length - 10} more</div>` : ''}
                     </div>
                 </div>`;
             });
-            return h+'</div>';
+            return h + '</div>';
         }
 
-        function renderN(f){
-            const np=f.filter(p=>['medium','low'].includes(p.priority)&&p.status==='backlog');
-            const owners=[...new Set(np.map(p=>p.owner))].sort();
-            let h='<div class="processor-grid">';
-            owners.forEach(o=>{
-                const ps=np.filter(p=>p.owner===o);
-                if(!ps.length)return;
-                h+=`<div class="processor-card">
-                    <h3>${o||'Unassigned'}</h3>
-                    <span class="count">${ps.length} non-prioritized in backlog</span>
-                    <div class="processor-projects">
-                        ${ps.map(p=>`<div class="mini-card ${p.priority}" onclick="editProj('${p.id}')">${p.name}</div>`).join('')}
-                    </div>
-                </div>`;
-            });
-            return h+'</div>';
-        }
+        function render() {
+            try {
+                const f = filter();
+                const c = document.getElementById('container');
 
-        function render(){
-            const f=filter();
-            const c=document.getElementById('container');
-            if(view==='kanban')c.innerHTML=renderK(f);
-            else if(view==='processor')c.innerHTML=renderP(f);
-            else c.innerHTML=renderN(f);
-            document.getElementById('total').textContent=projects.length;
-            document.getElementById('critical').textContent=projects.filter(p=>p.priority==='critical').length;
-            document.getElementById('inprog').textContent=projects.filter(p=>p.status==='in_progress').length;
-        }
+                if (view === 'priority') c.innerHTML = renderPriorityBoard(f);
+                else if (view === 'kanban') c.innerHTML = renderKanban(f);
+                else c.innerHTML = renderProcessor(f);
 
-        function setupFilters(){
-            const owners=[...new Set(projects.map(p=>p.owner).filter(o=>o))].sort();
-            document.getElementById('fowner').innerHTML='<option value="">All Owners</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('');
-            document.getElementById('powner').innerHTML='<option value="">Select...</option>'+[...new Set([...owners,...team.map(t=>t.name)])].sort().map(o=>`<option value="${o}">${o}</option>`).join('');
-        }
+                // Update stats
+                const backlogProjects = projects.filter(p => p.status === 'backlog');
+                const highInBacklog = backlogProjects.filter(p => p.priority === 'high' && p.prioritySlot >= 1 && p.prioritySlot <= 4);
+                const mediumInBacklog = backlogProjects.filter(p => p.priority === 'medium' && p.prioritySlot >= 5 && p.prioritySlot <= 8);
+                const activeProjects = projects.filter(p => p.status !== 'backlog' && p.status !== 'done');
 
-        function ds(e){dragId=e.target.dataset.id;e.target.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
-        function de(e){e.target.classList.remove('dragging');dragId=null;}
-        function dov(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
-        function dl(e){e.currentTarget.classList.remove('drag-over');}
-        function dr(e){
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-            const ns=e.currentTarget.dataset.status;
-            if(dragId&&ns){
-                pRef.child(dragId).update({status:ns,updated:new Date().toISOString().split('T')[0]});
+                document.getElementById('backlogCount').textContent = backlogProjects.length;
+                document.getElementById('highCount').textContent = highInBacklog.length;
+                document.getElementById('mediumCount').textContent = mediumInBacklog.length;
+                document.getElementById('activeCount').textContent = activeProjects.length;
+            } catch (error) {
+                Logger.error('Render error', { error: error.message });
             }
         }
 
-        function openModal(st){
+        function setupFilters() {
+            try {
+                const owners = [...new Set(projects.map(p => p.owner).filter(o => o))].sort();
+                document.getElementById('fowner').innerHTML = '<option value="">All Owners</option>' +
+                    owners.map(o => `<option value="${SecurityUtils.escapeHtml(o)}">${SecurityUtils.escapeHtml(o)}</option>`).join('');
+                document.getElementById('powner').innerHTML = '<option value="">Select...</option>' +
+                    [...new Set([...owners, ...team.map(t => t.name)])].sort()
+                        .map(o => `<option value="${SecurityUtils.escapeHtml(o)}">${SecurityUtils.escapeHtml(o)}</option>`).join('');
+            } catch (error) {
+                Logger.error('Setup filters error', { error: error.message });
+            }
+        }
+
+        // ============================================
+        // DRAG AND DROP
+        // ============================================
+        function ds(e) {
+            dragId = e.target.closest('.card').dataset.id;
+            e.target.closest('.card').classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function de(e) {
+            document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
+            dragId = null;
+        }
+
+        function dov(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function dl(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        // Drop on status column (Kanban)
+        async function dr(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            const ns = e.currentTarget.dataset.status;
+            if (!dragId || !ns) return;
+            if (!SecurityUtils.isAllowedValue(ns, ALLOWED_STATUSES)) return;
+            if (!RateLimiter.canProceed()) {
+                showToast('Demasiadas acciones. Espera un momento.', 'warning');
+                return;
+            }
+
+            const project = projects.find(p => p.id === dragId);
+            if (!project) return;
+
+            const wasInBacklog = project.status === 'backlog';
+            const wasHigh = project.priority === 'high' && project.prioritySlot >= 1 && project.prioritySlot <= 4;
+            const leavingBacklog = wasInBacklog && ns !== 'backlog';
+
+            try {
+                const updates = {
+                    status: ns,
+                    updated: new Date().toISOString().split('T')[0],
+                    updatedBy: currentUser ? currentUser.uid : 'unknown'
+                };
+
+                // Clear slot when leaving backlog
+                if (leavingBacklog && project.prioritySlot) {
+                    updates.prioritySlot = null;
+                }
+
+                await pRef.child(dragId).update(updates);
+                Logger.info('Project status updated via drag', { projectId: dragId, newStatus: ns, leavingBacklog });
+
+                // Check for promotion if high priority project left backlog
+                if (leavingBacklog && wasHigh) {
+                    const freedSlot = project.prioritySlot;
+                    // Need to check promotion with the old slot info
+                    setTimeout(() => {
+                        const candidates = projects.filter(p =>
+                            p.priority === 'medium' &&
+                            p.prioritySlot >= 5 &&
+                            p.prioritySlot <= 8 &&
+                            p.status === 'backlog' &&
+                            p.id !== dragId
+                        ).sort((a, b) => a.prioritySlot - b.prioritySlot);
+
+                        if (candidates.length > 0) {
+                            pendingPromotion = { freedSlot, candidates, trigger: 'left_backlog' };
+                            PrioritySystem.showPromotionDialog();
+                        }
+                    }, 500);
+                    showToast(`Proyecto movido a ${ns}. Slot #${freedSlot} liberado.`);
+                }
+            } catch (error) {
+                Logger.error('Drag update failed', { error: error.message });
+                showToast('Error al mover el proyecto', 'error');
+            }
+        }
+
+        // Drop on priority column
+        async function drPriority(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            const newPriority = e.currentTarget.dataset.priority;
+            if (!dragId || !newPriority) return;
+            if (!SecurityUtils.isAllowedValue(newPriority, ALLOWED_PRIORITIES)) return;
+            if (!RateLimiter.canProceed()) {
+                showToast('Demasiadas acciones. Espera un momento.', 'warning');
+                return;
+            }
+
+            const project = projects.find(p => p.id === dragId);
+            if (!project) return;
+
+            let newSlot = null;
+            if (newPriority === 'high') {
+                newSlot = PrioritySystem.getAvailableHighSlot();
+                if (!newSlot) {
+                    showToast('No hay slots disponibles en Alta Prioridad (máximo 4)', 'warning');
+                    return;
+                }
+            } else if (newPriority === 'medium') {
+                newSlot = PrioritySystem.getAvailableMediumSlot();
+                if (!newSlot) {
+                    showToast('No hay slots disponibles en Media Prioridad (máximo 4)', 'warning');
+                    return;
+                }
+            }
+
+            try {
+                await pRef.child(dragId).update({
+                    priority: newPriority,
+                    prioritySlot: newSlot,
+                    updated: new Date().toISOString().split('T')[0],
+                    updatedBy: currentUser ? currentUser.uid : 'unknown'
+                });
+                Logger.info('Project priority updated', { projectId: dragId, newPriority, newSlot });
+                showToast(`Proyecto movido a ${newPriority}${newSlot ? ` (slot ${newSlot})` : ''}`);
+            } catch (error) {
+                Logger.error('Priority update failed', { error: error.message });
+                showToast('Error al cambiar prioridad', 'error');
+            }
+        }
+
+        // Drop on specific slot
+        async function drSlot(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            const slot = parseInt(e.currentTarget.dataset.slot);
+            if (!dragId || !slot) return;
+            if (!RateLimiter.canProceed()) {
+                showToast('Demasiadas acciones. Espera un momento.', 'warning');
+                return;
+            }
+
+            if (!PrioritySystem.isSlotAvailable(slot)) {
+                showToast('Este slot ya está ocupado', 'warning');
+                return;
+            }
+
+            const newPriority = slot <= 4 ? 'high' : 'medium';
+
+            try {
+                await pRef.child(dragId).update({
+                    priority: newPriority,
+                    prioritySlot: slot,
+                    updated: new Date().toISOString().split('T')[0],
+                    updatedBy: currentUser ? currentUser.uid : 'unknown'
+                });
+                Logger.info('Project moved to slot', { projectId: dragId, slot });
+                showToast(`Proyecto asignado al slot ${slot}`);
+            } catch (error) {
+                Logger.error('Slot assignment failed', { error: error.message });
+                showToast('Error al asignar slot', 'error');
+            }
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function openModal(context) {
             document.getElementById('pform').reset();
-            document.getElementById('pid').value='';
-            document.getElementById('pstat').value=st||'backlog';
-            document.getElementById('mtitle').textContent='Add Project';
-            document.getElementById('delbtn').style.display='none';
+            document.getElementById('pid').value = '';
+            document.getElementById('mtitle').textContent = 'Add Project';
+            document.getElementById('delbtn').style.display = 'none';
+
+            // Set defaults based on context
+            if (['high', 'medium', 'low'].includes(context)) {
+                document.getElementById('pprio').value = context;
+                document.getElementById('pstat').value = 'backlog';
+            } else if (ALLOWED_STATUSES.includes(context)) {
+                document.getElementById('pstat').value = context;
+                document.getElementById('pprio').value = 'low';
+            }
+
+            updateSlotVisibility();
             document.getElementById('modal').classList.add('active');
         }
 
-        function editProj(id){
-            const p=projects.find(x=>x.id===id);
-            if(!p)return;
-            document.getElementById('mtitle').textContent='Edit Project';
-            document.getElementById('pid').value=p.id;
-            document.getElementById('pname').value=p.name;
-            document.getElementById('pdesc').value=p.description||'';
-            document.getElementById('powner').value=p.owner||'';
-            document.getElementById('pext').value=p.external||'';
-            document.getElementById('parea').value=p.area||'';
-            document.getElementById('pprio').value=p.priority;
-            document.getElementById('pstat').value=p.status;
-            document.getElementById('delbtn').style.display='block';
+        function editProj(id) {
+            const p = projects.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('mtitle').textContent = 'Edit Project';
+            document.getElementById('pid').value = p.id;
+            document.getElementById('pname').value = p.name || '';
+            document.getElementById('pdesc').value = p.description || '';
+            document.getElementById('powner').value = p.owner || '';
+            document.getElementById('pext').value = p.external || '';
+            document.getElementById('parea').value = p.area || '';
+            document.getElementById('pprio').value = p.priority || 'low';
+            document.getElementById('pstat').value = p.status || 'backlog';
+            // Slot is auto-assigned, stored in project.prioritySlot
+            document.getElementById('delbtn').style.display = 'block';
+
+            updateSlotVisibility();
             document.getElementById('modal').classList.add('active');
         }
 
-        function closeModal(){
+        // Priority slots are now auto-assigned - no manual selection needed
+        function updateSlotVisibility() {
+            // No-op: slots are auto-assigned based on priority and status
+        }
+
+        function closeModal() {
             document.getElementById('modal').classList.remove('active');
         }
 
-        function delProj(){
-            const id=document.getElementById('pid').value;
-            if(id&&confirm('Delete this project?')){
-                pRef.child(id).remove();
+        async function delProj() {
+            const id = document.getElementById('pid').value;
+            if (!id || !confirm('¿Eliminar este proyecto?')) return;
+            if (!RateLimiter.canProceed()) {
+                showToast('Demasiadas acciones. Espera un momento.', 'warning');
+                return;
+            }
+
+            try {
+                await pRef.child(id).remove();
+                Logger.info('Project deleted', { projectId: id });
+                showToast('Proyecto eliminado');
                 closeModal();
+            } catch (error) {
+                Logger.error('Delete failed', { error: error.message });
+                showToast('Error al eliminar el proyecto', 'error');
             }
         }
 
-        document.getElementById('pform').onsubmit=function(e){
+        // ============================================
+        // FORM SUBMISSION
+        // ============================================
+        document.getElementById('pform').onsubmit = async function(e) {
             e.preventDefault();
-            const id=document.getElementById('pid').value;
-            const d={
-                name:document.getElementById('pname').value,
-                description:document.getElementById('pdesc').value,
-                owner:document.getElementById('powner').value,
-                external:document.getElementById('pext').value,
-                area:document.getElementById('parea').value,
-                priority:document.getElementById('pprio').value,
-                status:document.getElementById('pstat').value,
-                updated:new Date().toISOString().split('T')[0]
-            };
-            if(id){
-                pRef.child(id).update(d);
-            } else {
-                d.id='p'+Date.now();
-                d.created=d.updated;
-                pRef.child(d.id).set(d);
+            if (!RateLimiter.canProceed()) {
+                showToast('Demasiadas acciones. Espera un momento.', 'warning');
+                return;
             }
-            closeModal();
+
+            const id = document.getElementById('pid').value;
+            const name = SecurityUtils.sanitizeInput(document.getElementById('pname').value, 200);
+            const description = SecurityUtils.sanitizeInput(document.getElementById('pdesc').value, 2000);
+            const owner = SecurityUtils.sanitizeInput(document.getElementById('powner').value, 100);
+            const external = SecurityUtils.sanitizeInput(document.getElementById('pext').value, 100);
+            const area = SecurityUtils.sanitizeInput(document.getElementById('parea').value, 100);
+            const priority = document.getElementById('pprio').value;
+            const status = document.getElementById('pstat').value;
+            let slot = null; // Slots are auto-assigned based on priority and status
+
+            if (!name) {
+                showToast('El nombre es requerido', 'error');
+                return;
+            }
+
+            if (!SecurityUtils.isAllowedValue(priority, ALLOWED_PRIORITIES)) {
+                showToast('Prioridad inválida', 'error');
+                return;
+            }
+
+            if (!SecurityUtils.isAllowedValue(status, ALLOWED_STATUSES)) {
+                showToast('Estado inválido', 'error');
+                return;
+            }
+
+            // Auto-assign slot (only for backlog projects)
+            const existingProject = id ? projects.find(p => p.id === id) : null;
+
+            if (status === 'backlog') {
+                if (priority === 'high') {
+                    // Keep existing slot if same priority level, otherwise auto-assign
+                    if (existingProject && existingProject.priority === 'high' && existingProject.prioritySlot >= 1 && existingProject.prioritySlot <= 4) {
+                        slot = existingProject.prioritySlot;
+                    } else {
+                        slot = PrioritySystem.getAvailableHighSlot();
+                        if (!slot) {
+                            showToast('No hay slots disponibles en Alta Prioridad (máximo 4)', 'error');
+                            return;
+                        }
+                    }
+                } else if (priority === 'medium') {
+                    // Keep existing slot if same priority level, otherwise auto-assign
+                    if (existingProject && existingProject.priority === 'medium' && existingProject.prioritySlot >= 5 && existingProject.prioritySlot <= 8) {
+                        slot = existingProject.prioritySlot;
+                    } else {
+                        slot = PrioritySystem.getAvailableMediumSlot();
+                        if (!slot) {
+                            showToast('No hay slots disponibles en Media Prioridad (máximo 4)', 'error');
+                            return;
+                        }
+                    }
+                } else {
+                    // Low priority has no slot
+                    slot = null;
+                }
+            } else {
+                // Projects not in backlog don't occupy slots
+                slot = null;
+            }
+
+            const d = {
+                name,
+                description,
+                owner,
+                external,
+                area,
+                priority,
+                prioritySlot: slot,
+                status,
+                updated: new Date().toISOString().split('T')[0],
+                updatedBy: currentUser ? currentUser.uid : 'unknown'
+            };
+
+            try {
+                if (id) {
+                    const oldProject = projects.find(p => p.id === id);
+                    const wasHigh = oldProject && oldProject.priority === 'high' && oldProject.prioritySlot >= 1 && oldProject.prioritySlot <= 4;
+
+                    await pRef.child(id).update(d);
+                    Logger.info('Project updated', { projectId: id });
+                    showToast('Proyecto actualizado');
+
+                    // Check for promotion if high priority project completed
+                    if (status === 'done' && wasHigh && oldProject.status !== 'done') {
+                        setTimeout(() => PrioritySystem.checkForPromotion(id), 500);
+                    }
+                } else {
+                    const newId = SecurityUtils.generateId();
+                    d.id = newId;
+                    d.created = d.updated;
+                    d.createdBy = currentUser ? currentUser.uid : 'unknown';
+                    await pRef.child(newId).set(d);
+                    Logger.info('Project created', { projectId: newId });
+                    showToast('Proyecto creado');
+                }
+                closeModal();
+            } catch (error) {
+                Logger.error('Save failed', { error: error.message });
+                showToast('Error al guardar el proyecto', 'error');
+            }
         };
 
-        document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal();};
-        document.onkeydown=e=>{if(e.key==='Escape')closeModal();};
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        document.getElementById('modal').onclick = e => {
+            if (e.target.id === 'modal') closeModal();
+        };
+
+        document.getElementById('promotionDialog').onclick = e => {
+            if (e.target.id === 'promotionDialog') closePromotionDialog();
+        };
+
+        document.onkeydown = e => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closePromotionDialog();
+            }
+        };
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            Logger.error('Unhandled error', { message, source, lineno, colno });
+            return false;
+        };
+
+        window.onunhandledrejection = function(event) {
+            Logger.error('Unhandled promise rejection', { reason: event.reason });
+        };
     </script>
 </body>
 </html>
